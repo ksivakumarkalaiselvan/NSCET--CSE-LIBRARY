@@ -29,6 +29,11 @@ async function login(req, res, next) {
       });
     }
 
+    if (user.email && user.email.toLowerCase() === 'admin@college.edu') {
+      user.role = 'admin';
+      user.name = 'Prof. ARCHANA .R';
+    }
+
     const isMatch = await comparePassword(password, user.passwordHash);
     if (!isMatch) {
       return res.status(401).json({
@@ -119,6 +124,11 @@ async function getMe(req, res, next) {
     const user = await dataService.findUserByEmail(req.user.email);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User profile not found.' });
+    }
+
+    if (user.email && user.email.toLowerCase() === 'admin@college.edu') {
+      user.role = 'admin';
+      user.name = 'Prof. ARCHANA .R';
     }
 
     return res.status(200).json({

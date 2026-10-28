@@ -483,7 +483,13 @@ function getDashboardStats(ss) {
 function findUserByEmail(ss, email) {
   const users = getSheetData(ss, 'Users');
   const staff = users.find(u => (u.email || '').toLowerCase() === (email || '').toLowerCase());
-  if (staff) return staff;
+  if (staff) {
+    if ((staff.email || '').toLowerCase() === 'admin@college.edu') {
+      staff.name = 'Prof. ARCHANA .R';
+      staff.role = 'admin';
+    }
+    return staff;
+  }
 
   const students = getSheetData(ss, 'Students');
   const stu = students.find(s => (s.email || '').toLowerCase() === (email || '').toLowerCase());

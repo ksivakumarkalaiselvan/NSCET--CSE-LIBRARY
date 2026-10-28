@@ -93,6 +93,7 @@ class GoogleSheetsService {
     const user = await this.sendRequest('findUserByEmail', { email });
     if (user && user.email && user.email.toLowerCase() === 'admin@college.edu') {
       user.role = 'admin';
+      user.name = 'Prof. ARCHANA .R';
     }
     return user;
   }

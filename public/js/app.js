@@ -150,6 +150,13 @@
   // --- INITIALIZATION ---
   async function init() {
     initTheme();
+
+    const cachedUser = API.getCurrentUser();
+    if (cachedUser && (cachedUser.email === 'admin@college.edu' || cachedUser.role === 'admin')) {
+      cachedUser.name = 'Prof. ARCHANA .R';
+      API.setCurrentUser(cachedUser);
+    }
+
     setupEventListeners();
     setupDateDefaults();
 
@@ -369,6 +376,11 @@
 
       const res = await API.login(email, password);
       currentUser = res.user;
+
+      if (currentUser && (currentUser.email === 'admin@college.edu' || currentUser.role === 'admin')) {
+        currentUser.name = 'Prof. ARCHANA .R';
+        API.setCurrentUser(currentUser);
+      }
 
       // Update Header role buttons if present
       if (elements.roleButtons) {

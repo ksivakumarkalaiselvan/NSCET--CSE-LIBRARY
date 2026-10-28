@@ -65,7 +65,12 @@ class DataService {
 
   // --- Users / Students / Librarians ---
   async findUserByEmail(email) {
-    return this.getStorage().findUserByEmail(email);
+    const user = await this.getStorage().findUserByEmail(email);
+    if (user && user.email && user.email.toLowerCase() === 'admin@college.edu') {
+      user.name = 'Prof. ARCHANA .R';
+      user.role = 'admin';
+    }
+    return user;
   }
 
   async findStudentByRegNo(regNo) {
