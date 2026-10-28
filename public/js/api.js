@@ -3,7 +3,8 @@
  * Handles communication with Node/Express REST endpoints with JWT authorization
  */
 const API = (function() {
-  const BASE_URL = '/api';
+  const customBase = window.BACKEND_API_URL || localStorage.getItem('nscet_backend_url') || '';
+  const BASE_URL = customBase ? (customBase.replace(/\/+$/, '') + '/api') : '/api';
 
   function getToken() {
     return localStorage.getItem('scholarlib_token') || '';

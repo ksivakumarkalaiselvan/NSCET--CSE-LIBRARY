@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: nscet-cse-library-api
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: STORAGE_TYPE
+        value: sheets
+      - key: GOOGLE_SHEETS_SCRIPT_URL
+        value: https://script.google.com/macros/s/AKfycbwv9_AeklOTfeLj_E6_IU56K130k1K0Wh-tFYmR-1BFkmBrLqrxFYFZDoyHoeNgZb0/exec
+      - key: JWT_SECRET
+        value: scholarlib_super_secret_jwt_key_2026
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: DEFAULT_LOAN_DAYS
+        value: 14
+      - key: FINE_PER_DAY
+        value: 5.0
+      - key: MAX_BORROW_LIMIT
+        value: 3
