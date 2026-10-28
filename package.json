@@ -1,0 +1,26 @@
+{
+  "name": "cse-lib",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/test-system.js && node test/test-api.js",
+    "test:sheets": "node test/test-live-sheets-workflow.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.12.1"
+  },
+  "devDependencies": {
+    "supertest": "^7.3.1"
+  }
+}

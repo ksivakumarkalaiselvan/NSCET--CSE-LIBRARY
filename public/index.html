@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NSCET &amp; CSE — Library Management System</title>
+  <link rel="icon" type="image/png" href="/assets/nscet-logo.png">
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('scholarlib_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', saved);
+      } catch(e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-icon">
+        <img src="/assets/nscet-logo.png" alt="NSCET Logo" class="brand-logo-img">
+      </div>
+      <div>
+        <div class="brand-title">NSCET</div>
+        <div class="brand-subtitle">Department of CSE</div>
+      </div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section-title">Overview</div>
+      <button class="nav-item active" data-view="dashboard">
+        <span class="icon">📊</span>
+        <span>Dashboard</span>
+      </button>
+
+      <div class="nav-section-title">Books Catalog</div>
+      <button class="nav-item" data-view="available-books" id="nav-available-books">
+        <span class="icon">🟢</span>
+        <span>Available Books</span>
+        <span class="nav-badge badge-success" id="sidebar-available-count">0</span>
+      </button>
+
+      <button class="nav-item" data-view="all-books" id="nav-all-books">
+        <span class="icon">📚</span>
+        <span>Complete Catalog</span>
+        <span class="nav-badge" id="sidebar-total-count">0</span>
+      </button>
+
+      <div class="nav-section-title staff-only">Circulation Desk</div>
+      <button class="nav-item staff-only" data-view="issue-book" id="nav-issue-book">
+        <span class="icon">📤</span>
+        <span>Issue Book</span>
+      </button>
+
+      <button class="nav-item staff-only" data-view="return-book" id="nav-return-book">
+        <span class="icon">📥</span>
+        <span>Return Book</span>
+        <span class="nav-badge" id="sidebar-issued-count">0</span>
+      </button>
+
+      <div class="nav-section-title staff-only">Users & Directory</div>
+      <button class="nav-item staff-only" data-view="students-mgmt">
+        <span class="icon">🎓</span>
+        <span>Students</span>
+      </button>
+
+      <button class="nav-item admin-only" data-view="librarians-mgmt">
+        <span class="icon">🛡️</span>
+        <span>Librarians</span>
+      </button>
+
+      <div class="nav-section-title student-only" style="display:none;">Student Portal</div>
+      <button class="nav-item student-only" data-view="my-loans" style="display:none;">
+        <span class="icon">🔖</span>
+        <span>My Borrowed Books</span>
+      </button>
+
+      <div class="nav-section-title">Configuration</div>
+      <button class="nav-item" data-view="settings">
+        <span class="icon">⚙️</span>
+        <span>Settings & Sheets</span>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="mode-pill mode-demo" id="storage-mode-indicator">
+        <span class="dot"></span>
+        <span id="storage-mode-text">Storage: Demo Store</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Layout -->
+  <div class="main-layout">
+    
+    <!-- Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <button class="mobile-toggle" id="mobile-sidebar-toggle" aria-label="Toggle Sidebar">☰</button>
+        <div class="global-search-container">
+          <span class="global-search-icon">🔍</span>
+          <input type="text" id="global-search-input" class="global-search-input" placeholder="Search by Book Name, Author, ISBN, or Rack...">
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Glass Theme Toggle (Dark / Light Glass) -->
+        <button class="btn-icon theme-toggle-btn" id="btn-theme-toggle" title="Toggle Theme (Dark / Light Glass)">
+          <span class="theme-icon">🌙</span>
+        </button>
+
+        <!-- User Chip -->
+        <div class="user-chip">
+          <div class="user-avatar" id="current-user-avatar">A</div>
+          <div class="user-details">
+            <span class="user-name" id="current-user-name">Prof. ARCHANA .R</span>
+            <span class="user-role-badge" id="current-user-role">ADMIN</span>
+          </div>
+        </div>
+
+        <button class="btn-icon" id="btn-auth-action" title="Login with other account / Logout">
+          🚪
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Views -->
+    <main class="content-body">
+
+      <!-- ================= VIEW 1: DASHBOARD ================= -->
+      <section id="view-dashboard" class="view-section active">
+        <div class="page-title-bar">
+          <div>
+            <h1 class="page-title">NSCET &amp; CSE Library Overview</h1>
+            <p class="page-subtitle">Nadar Saraswathi College of Engineering &amp; Technology — Department of Computer Science &amp; Engineering</p>
+          </div>
+          <div class="actions staff-only">
+            <button class="btn btn-primary" id="btn-quick-add-book">
+              <span>➕</span> Add New Book
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Statistics Summary Cards (Calculated from database records) -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon primary">📚</div>
+            <div class="stat-data">
+              <div class="stat-value" id="stat-total-titles">0</div>
+              <div class="stat-label">Total Unique Book Titles</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon secondary">📦</div>
+            <div class="stat-data">
+              <div class="stat-value" id="stat-physical-copies">0</div>
+              <div class="stat-label">Total Physical Copies</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon success">🟢</div>
+            <div class="stat-data">
+              <div class="stat-value" id="stat-available-copies">0</div>
+              <div class="stat-label">Available Copies in Stock</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon warning">📤</div>
+            <div class="stat-data">
+              <div class="stat-value" id="stat-issued-copies">0</div>
+              <div class="stat-label">Currently Issued Copies</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon secondary">🎓</div>
+            <div class="stat-data">
+              <div class="stat-value" id="stat-students">0</div>
+              <div class="stat-label">Registered Students</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon primary">🛡️</div>
+            <div class="stat-data">
+              <div class="stat-value" id="stat-librarians">0</div>
+              <div class="stat-label">Registered Librarians</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon danger">⏰</div>
+            <div class="stat-data">
+              <div class="stat-value" id="stat-overdue-txns">0</div>
+              <div class="stat-label">Overdue Transactions</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon warning">💰</div>
+            <div class="stat-data">
+              <div class="stat-value" id="stat-fines">₹0</div>
+              <div class="stat-label">Outstanding Fines</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Content Grid -->
+        <div class="dashboard-sections">
+          <!-- Currently Available Books Section (Requirement 6) -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">
+                <span>🟢</span> Currently Available Books
+              </h2>
+              <button class="btn btn-secondary btn-sm" id="btn-dashboard-view-all-available">
+                View All Available Books →
+              </button>
+            </div>
+            <div class="card-body">
+              <p class="form-help" style="margin-bottom: 1rem;">
+                Showing books that currently have at least one copy ready for issue.
+              </p>
+              <div id="dashboard-available-books-list" class="books-grid">
+                <!-- Dynamically populated with actual book names, authors, available copy counts -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Quick Actions & Recently Added Books -->
+          <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Quick Actions -->
+            <div class="card staff-only">
+              <div class="card-header">
+                <h3 class="card-title">⚡ Quick Actions</h3>
+              </div>
+              <div class="card-body">
+                <div class="quick-actions-grid">
+                  <div class="action-btn" id="qa-issue">
+                    <span class="action-icon">📤</span>
+                    <span class="action-title">Issue Book</span>
+                    <span class="action-desc">Check out to student</span>
+                  </div>
+                  <div class="action-btn" id="qa-return">
+                    <span class="action-icon">📥</span>
+                    <span class="action-title">Return Book</span>
+                    <span class="action-desc">Process check-in & fines</span>
+                  </div>
+                  <div class="action-btn" id="qa-add">
+                    <span class="action-icon">➕</span>
+                    <span class="action-title">Add Book</span>
+                    <span class="action-desc">Catalog new title</span>
+                  </div>
+                  <div class="action-btn" id="qa-students">
+                    <span class="action-icon">🎓</span>
+                    <span class="action-title">Students</span>
+                    <span class="action-desc">View registered students</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recently Added Books Section (Requirement 6) -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">✨ Recently Added Books</h3>
+              </div>
+              <div class="card-body" style="padding: 0.5rem 1rem;">
+                <div id="dashboard-recent-books-list">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 2: AVAILABLE BOOKS (Dedicated Page) ================= -->
+      <section id="view-available-books" class="view-section">
+        <div class="page-title-bar">
+          <div>
+            <h1 class="page-title">
+              <span>🟢</span> Available Books
+            </h1>
+            <p class="page-subtitle">
+              Displaying all books that currently have at least one physical copy available for borrowing.
+            </p>
+          </div>
+          <div class="actions">
+            <span class="status-badge available" id="badge-available-summary">
+              0 Books Currently In Stock
+            </span>
+          </div>
+        </div>
+
+        <!-- Filters & Search Toolbar -->
+        <div class="filters-bar">
+          <div class="search-filter-input">
+            <span class="icon">🔍</span>
+            <input type="text" id="available-search-input" placeholder="Search by Book Name, Author, ISBN, or Rack...">
+          </div>
+
+          <div class="filter-controls">
+            <select id="available-category-filter" class="select-filter">
+              <option value="All">All Categories</option>
+              <!-- Populated dynamically -->
+            </select>
+
+            <select id="available-sort-filter" class="select-filter">
+              <option value="recent">Sort: Recently Added</option>
+              <option value="title-asc">Sort: Title (A - Z)</option>
+              <option value="title-desc">Sort: Title (Z - A)</option>
+              <option value="author-asc">Sort: Author Name</option>
+              <option value="available-desc">Sort: Most Copies Available</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Available Books Grid (Cards display Actual Book Names, Authors, Rack, Availability) -->
+        <div id="available-books-grid" class="books-grid">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div id="available-empty-state" class="empty-state" style="display: none;">
+          <div class="empty-state-icon">📭</div>
+          <h3 class="empty-state-title">No Available Books Found</h3>
+          <p class="empty-state-text">
+            There are currently no books in stock matching your filter criteria, or all copies are currently issued.
+          </p>
+          <button class="btn btn-secondary btn-sm" id="btn-reset-available-filters">Reset Filters</button>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 3: COMPLETE BOOK CATALOG (ALL BOOKS) ================= -->
+      <section id="view-all-books" class="view-section">
+        <div class="page-title-bar">
+          <div>
+            <h1 class="page-title">
+              <span>📚</span> Complete Book Catalog
+            </h1>
+            <p class="page-subtitle">
+              Comprehensive registry of all library titles (both available and currently issued titles).
+            </p>
+          </div>
+          <div class="actions staff-only">
+            <button class="btn btn-primary" id="btn-catalog-add-book">
+              <span>➕</span> Add New Book
+            </button>
+          </div>
+        </div>
+
+        <!-- Filters & Search Toolbar -->
+        <div class="filters-bar">
+          <div class="search-filter-input">
+            <span class="icon">🔍</span>
+            <input type="text" id="catalog-search-input" placeholder="Search title, author, ISBN, or shelf rack...">
+          </div>
+
+          <div class="filter-controls">
+            <select id="catalog-availability-filter" class="select-filter">
+              <option value="all">All Statuses (Available & Unavailable)</option>
+              <option value="available">Available Only</option>
+              <option value="unavailable">Currently Unavailable Only</option>
+            </select>
+
+            <select id="catalog-category-filter" class="select-filter">
+              <option value="All">All Categories</option>
+            </select>
+
+            <select id="catalog-sort-filter" class="select-filter">
+              <option value="recent">Sort: Recently Added</option>
+              <option value="title-asc">Sort: Title (A - Z)</option>
+              <option value="title-desc">Sort: Title (Z - A)</option>
+              <option value="author-asc">Sort: Author</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- All Books Grid / Cards -->
+        <div id="catalog-books-grid" class="books-grid">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div id="catalog-empty-state" class="empty-state" style="display: none;">
+          <div class="empty-state-icon">🔍</div>
+          <h3 class="empty-state-title">No Books Match Your Criteria</h3>
+          <p class="empty-state-text">Try adjusting your search terms or filters.</p>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 4: ISSUE BOOK ================= -->
+      <section id="view-issue-book" class="view-section staff-only">
+        <div class="page-title-bar">
+          <div>
+            <h1 class="page-title">
+              <span>📤</span> Issue Book to Student
+            </h1>
+            <p class="page-subtitle">
+              Verify student quota and issue available library books with automatic due date calculation.
+            </p>
+          </div>
+        </div>
+
+        <div class="card" style="max-width: 800px; margin: 0 auto;">
+          <div class="card-header">
+            <h3 class="card-title">Book Issue Form</h3>
+          </div>
+          <div class="card-body">
+            <form id="form-issue-book">
+              
+              <!-- Step 1: Select Student -->
+              <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label">
+                  Step 1: Select Student <span class="required">*</span>
+                </label>
+                <div style="display: flex; gap: 0.75rem;">
+                  <input type="text" id="issue-student-search" class="form-input" placeholder="Type Student Name or Register Number (e.g. CS2023001)...">
+                </div>
+                <div id="issue-student-preview" style="margin-top: 0.5rem; display: none;"></div>
+                <input type="hidden" id="issue-selected-student-id">
+              </div>
+
+              <!-- Step 2: Select Book -->
+              <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label">
+                  Step 2: Select Book Title <span class="required">*</span>
+                </label>
+                <div style="display: flex; gap: 0.75rem;">
+                  <input type="text" id="issue-book-search" class="form-input" placeholder="Type Book Title or ISBN (e.g. Java, CLRS, Clean Code)...">
+                </div>
+                <div id="issue-book-preview" style="margin-top: 0.5rem; display: none;"></div>
+                <input type="hidden" id="issue-selected-book-id">
+              </div>
+
+              <!-- Step 3: Dates -->
+              <div class="form-grid" style="margin-bottom: 1.25rem;">
+                <div class="form-group">
+                  <label class="form-label">Issue Date</label>
+                  <input type="date" id="issue-date" class="form-input">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Due Date (Auto-calculated: 14 Days)</label>
+                  <input type="date" id="issue-due-date" class="form-input">
+                </div>
+              </div>
+
+              <!-- Step 4: Notes -->
+              <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label">Notes / Purpose (Optional)</label>
+                <input type="text" id="issue-notes" class="form-input" placeholder="e.g. Final Year Project Reference, Semester Exam Prep">
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="reset" class="btn btn-secondary">Clear Form</button>
+                <button type="submit" class="btn btn-primary" id="btn-confirm-issue">
+                  <span>✅</span> Confirm & Issue Book
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 5: RETURN BOOK ================= -->
+      <section id="view-return-book" class="view-section staff-only">
+        <div class="page-title-bar">
+          <div>
+            <h1 class="page-title">
+              <span>📥</span> Book Return & Circulation Desk
+            </h1>
+            <p class="page-subtitle">
+              Process returned books, automatically calculate overdue fines, and immediately restore stock availability.
+            </p>
+          </div>
+        </div>
+
+        <div class="filters-bar">
+          <div class="search-filter-input">
+            <span class="icon">🔍</span>
+            <input type="text" id="return-search-input" placeholder="Search active transactions by Student Name, Reg No, or Book Title...">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Transaction ID</th>
+                  <th>Student Name</th>
+                  <th>Reg Number</th>
+                  <th>Book Title</th>
+                  <th>Issue Date</th>
+                  <th>Due Date</th>
+                  <th>Status / Overdue</th>
+                  <th>Calculated Fine</th>
+                  <th style="text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="return-transactions-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div id="return-empty-state" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">🎉</div>
+            <h3 class="empty-state-title">No Active Borrowing Transactions</h3>
+            <p class="empty-state-text">All issued books have been returned.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 6: STUDENTS MANAGEMENT ================= -->
+      <section id="view-students-mgmt" class="view-section staff-only">
+        <div class="page-title-bar">
+          <div>
+            <h1 class="page-title">
+              <span>🎓</span> Students Directory
+            </h1>
+            <p class="page-subtitle">Manage registered college students, check borrowing quotas, and view accounts.</p>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" id="btn-open-register-student-modal">
+              <span>➕</span> Register New Student
+            </button>
+          </div>
+        </div>
+
+        <div class="filters-bar">
+          <div class="search-filter-input">
+            <span class="icon">🔍</span>
+            <input type="text" id="student-search-input" placeholder="Search student by name, register number, department, email...">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Reg Number</th>
+                  <th>Student Name</th>
+                  <th>Department</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Active Loans</th>
+                  <th>Account Status</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="students-tbody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 7: LIBRARIANS MANAGEMENT ================= -->
+      <section id="view-librarians-mgmt" class="view-section admin-only">
+        <div class="page-title-bar">
+          <div>
+            <h1 class="page-title">
+              <span>🛡️</span> Librarians & Staff Management
+            </h1>
+            <p class="page-subtitle">Authorized administrator view to manage library staff accounts.</p>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" id="btn-open-add-librarian-modal">
+              <span>➕</span> Add New Librarian
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Librarian ID</th>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="librarians-tbody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 8: STUDENT PORTAL (MY LOANS) ================= -->
+      <section id="view-my-loans" class="view-section student-only" style="display:none;">
+        <div class="page-title-bar">
+          <div>
+            <h1 class="page-title">
+              <span>🔖</span> My Borrowed Books
+            </h1>
+            <p class="page-subtitle">View your currently borrowed library books, return due dates, and fine alerts.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Transaction ID</th>
+                  <th>Book Title</th>
+                  <th>Issue Date</th>
+                  <th>Due Date</th>
+                  <th>Days Left / Overdue</th>
+                  <th>Fine Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="my-loans-tbody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 9: SETTINGS & GOOGLE SHEETS ================= -->
+      <section id="view-settings" class="view-section">
+        <div class="page-title-bar">
+          <div>
+            <h1 class="page-title">
+              <span>⚙️</span> Library Settings & Google Sheets Database
+            </h1>
+            <p class="page-subtitle">Configure circulation policies, fine rates, and inspect database integration status.</p>
+          </div>
+        </div>
+
+        <div class="dashboard-sections">
+          <!-- Policy Rules Card -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Circulation Rules & Policies</h3>
+            </div>
+            <div class="card-body">
+              <form id="form-settings">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                  <label class="form-label">College Library Name</label>
+                  <input type="text" id="setting-college-name" class="form-input">
+                </div>
+
+                <div class="form-grid" style="margin-bottom: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label">Default Loan Period (Days)</label>
+                    <input type="number" id="setting-loan-days" class="form-input" min="1" max="90">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Fine Rate Per Overdue Day (₹)</label>
+                    <input type="number" id="setting-fine-rate" class="form-input" min="0" step="0.5">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                  <label class="form-label">Maximum Books Per Student</label>
+                  <input type="number" id="setting-max-limit" class="form-input" min="1" max="10">
+                </div>
+
+                <div class="admin-only" style="display: flex; justify-content: flex-end;">
+                  <button type="submit" class="btn btn-primary">Save Settings</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Google Sheets Database Integration Status Card -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📊 Google Sheets Database</h3>
+            </div>
+            <div class="card-body">
+              <div style="background: var(--bg-main); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
+                <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.25rem;">Current Persistence Mode:</div>
+                <div id="settings-storage-mode-display" style="font-size: 0.85rem; color: var(--primary); font-weight: 600;">
+                  Demo Mode (Fast in-memory store with full validation)
+                </div>
+              </div>
+
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
+                In Phase 5 & 6, when you are ready to switch from Demo data to your own Google Sheets spreadsheet, the application is pre-architected to seamlessly synchronize all Books, Transactions, Users, and Settings via Google Apps Script Web App API!
+              </p>
+
+              <button class="btn btn-secondary btn-sm" id="btn-show-sheets-guide" style="width: 100%;">
+                📋 View Google Sheets Setup Instructions
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- Modal: Add New Book (Requirement 2) -->
+<div class="modal-backdrop" id="modal-add-book">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">📖 Add New Book to Library Catalog</h3>
+      <button class="modal-close" data-close="modal-add-book">&times;</button>
+    </div>
+    <form id="form-add-book">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Book Title / Name <span class="required">*</span></label>
+            <input type="text" id="add-book-title" class="form-input" placeholder="e.g. Java: The Complete Reference" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Author Name <span class="required">*</span></label>
+            <input type="text" id="add-book-author" class="form-input" placeholder="e.g. Herbert Schildt" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">ISBN Number <span class="required">*</span></label>
+            <input type="text" id="add-book-isbn" class="form-input" placeholder="e.g. 978-0134685991" required>
+            <span class="form-help">Must be unique. Duplicate ISBNs are strictly blocked.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Category <span class="required">*</span></label>
+            <input type="text" id="add-book-category" class="form-input" list="category-datalist" placeholder="e.g. Programming, Algorithms" required>
+            <datalist id="category-datalist"></datalist>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Publisher</label>
+            <input type="text" id="add-book-publisher" class="form-input" placeholder="e.g. McGraw-Hill Education">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Edition</label>
+            <input type="text" id="add-book-edition" class="form-input" placeholder="e.g. 11th Edition">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Published Year</label>
+            <input type="number" id="add-book-year" class="form-input" placeholder="e.g. 2021" min="1900" max="2030">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Total Copies <span class="required">*</span></label>
+            <input type="number" id="add-book-copies" class="form-input" placeholder="e.g. 10" min="1" required>
+            <span class="form-help">Available copies will be initialized to Total Copies.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Shelf / Rack Number <span class="required">*</span></label>
+            <input type="text" id="add-book-rack" class="form-input" placeholder="e.g. Rack A-01" required>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Book Cover Image URL (Optional)</label>
+            <input type="url" id="add-book-cover" class="form-input" placeholder="https://images.unsplash.com/...">
+            <span class="form-help">Leave empty to use a professional default library cover.</span>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Description / Synopsis</label>
+            <textarea id="add-book-desc" class="form-textarea" rows="3" placeholder="Summary of the book, topics covered, syllabus relevance..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close="modal-add-book">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-save-new-book">Save Book to Catalog</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Edit Book -->
+<div class="modal-backdrop" id="modal-edit-book">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">✏️ Edit Book Details</h3>
+      <button class="modal-close" data-close="modal-edit-book">&times;</button>
+    </div>
+    <form id="form-edit-book">
+      <input type="hidden" id="edit-book-id">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Book Title <span class="required">*</span></label>
+            <input type="text" id="edit-book-title" class="form-input" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Author Name <span class="required">*</span></label>
+            <input type="text" id="edit-book-author" class="form-input" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">ISBN <span class="required">*</span></label>
+            <input type="text" id="edit-book-isbn" class="form-input" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Category <span class="required">*</span></label>
+            <input type="text" id="edit-book-category" class="form-input" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Publisher</label>
+            <input type="text" id="edit-book-publisher" class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Edition</label>
+            <input type="text" id="edit-book-edition" class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Published Year</label>
+            <input type="number" id="edit-book-year" class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Total Copies <span class="required">*</span></label>
+            <input type="number" id="edit-book-copies" class="form-input" min="1" required>
+            <span class="form-help">Cannot be reduced below currently issued copies.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Shelf / Rack Number <span class="required">*</span></label>
+            <input type="text" id="edit-book-rack" class="form-input" required>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Book Cover Image URL</label>
+            <input type="url" id="edit-book-cover" class="form-input">
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Description</label>
+            <textarea id="edit-book-desc" class="form-textarea" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close="modal-edit-book">Cancel</button>
+        <button type="submit" class="btn btn-primary">Update Book</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: View Book Details -->
+<div class="modal-backdrop" id="modal-book-details">
+  <div class="modal-content" style="max-width: 680px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="detail-book-title">Book Details</h3>
+      <button class="modal-close" data-close="modal-book-details">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+        <div style="width: 170px; height: 240px; border-radius: var(--radius-md); overflow: hidden; background: #1e293b; flex-shrink: 0;">
+          <img id="detail-book-cover" src="" alt="Cover" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div style="flex: 1; min-width: 260px;">
+          <div style="margin-bottom: 0.5rem;">
+            <span class="status-badge available" id="detail-book-badge">Available</span>
+            <span class="status-badge" style="background: var(--primary-light); color: var(--primary);" id="detail-book-category">Category</span>
+          </div>
+          <h2 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 0.25rem;" id="detail-modal-title">Title</h2>
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 0.75rem;" id="detail-book-author">By Author</p>
+          
+          <div style="background: var(--bg-main); padding: 0.75rem; border-radius: var(--radius-md); font-size: 0.85rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem;">
+            <div><strong>ISBN:</strong> <span id="detail-book-isbn"></span></div>
+            <div><strong>Shelf Rack:</strong> <span id="detail-book-rack"></span></div>
+            <div><strong>Publisher:</strong> <span id="detail-book-publisher"></span></div>
+            <div><strong>Edition / Year:</strong> <span id="detail-book-edition-year"></span></div>
+            <div><strong>Total Copies:</strong> <span id="detail-book-total"></span></div>
+            <div><strong>Available Copies:</strong> <span id="detail-book-available" style="font-weight: 700; color: var(--success);"></span></div>
+          </div>
+
+          <div style="font-size: 0.88rem; color: var(--text-main); line-height: 1.5;">
+            <strong>Description:</strong>
+            <p id="detail-book-desc" style="margin-top: 0.25rem; color: var(--text-muted);"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-close="modal-book-details">Close</button>
+      <button type="button" class="btn btn-primary staff-only" id="btn-detail-issue-book">Issue This Book →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Register Student -->
+<div class="modal-backdrop" id="modal-register-student">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">🎓 Register New Student</h3>
+      <button class="modal-close" data-close="modal-register-student">&times;</button>
+    </div>
+    <form id="form-register-student">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Full Name <span class="required">*</span></label>
+            <input type="text" id="reg-student-name" class="form-input" placeholder="e.g. Rahul Sharma" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Register Number <span class="required">*</span></label>
+            <input type="text" id="reg-student-regno" class="form-input" placeholder="e.g. CS2023010" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Department <span class="required">*</span></label>
+            <input type="text" id="reg-student-dept" class="form-input" placeholder="e.g. Computer Science & Engg" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address <span class="required">*</span></label>
+            <input type="email" id="reg-student-email" class="form-input" placeholder="student@college.edu" required>
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" id="reg-student-phone" class="form-input" placeholder="+91 98765 43210">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close="modal-register-student">Cancel</button>
+        <button type="submit" class="btn btn-primary">Register Student</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Add Librarian (Admin Only) -->
+<div class="modal-backdrop" id="modal-add-librarian">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">🛡️ Add Librarian Staff</h3>
+      <button class="modal-close" data-close="modal-add-librarian">&times;</button>
+    </div>
+    <form id="form-add-librarian">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Staff Name <span class="required">*</span></label>
+            <input type="text" id="add-lib-name" class="form-input" placeholder="e.g. Mrs. Lakshmi" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Official Email <span class="required">*</span></label>
+            <input type="email" id="add-lib-email" class="form-input" placeholder="staff@college.edu" required>
+          </div>
+          <div class="form-group full-width">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" id="add-lib-phone" class="form-input" placeholder="+91 94440 12345">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close="modal-add-librarian">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Librarian</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Google Sheets Setup Guide -->
+<div class="modal-backdrop" id="modal-sheets-guide">
+  <div class="modal-content" style="max-width: 760px;">
+    <div class="modal-header">
+      <h3 class="modal-title">📋 Google Sheets Database Setup Instructions</h3>
+      <button class="modal-close" data-close="modal-sheets-guide">&times;</button>
+    </div>
+    <div class="modal-body" style="font-size: 0.9rem; line-height: 1.6;">
+      <p style="margin-bottom: 0.75rem;">
+        When you are ready to persist data to your own Google Sheets, follow these exact instructions:
+      </p>
+
+      <h4 style="color: var(--primary); margin-top: 1rem; margin-bottom: 0.25rem;">1. Required Google Spreadsheet & Tabs:</h4>
+      <p>Create a Google Spreadsheet named <code>ScholarLib College Library Database</code> with these 5 tabs:</p>
+      <ul style="margin-left: 1.5rem; margin-bottom: 0.75rem;">
+        <li><strong>Books</strong> (Columns: <code>id, isbn, title, author, publisher, category, edition, publishedYear, totalCopies, availableCopies, rackNumber, coverUrl, description, status, createdAt</code>)</li>
+        <li><strong>Transactions</strong> (Columns: <code>id, studentId, studentRegNo, studentName, bookId, bookTitle, issueDate, dueDate, returnDate, status, fineAmount, finePaid, issuedBy, notes</code>)</li>
+        <li><strong>Students</strong> (Columns: <code>id, regNo, name, department, email, phone, status, passwordHash, createdAt</code>)</li>
+        <li><strong>Users</strong> (Columns: <code>id, name, email, phone, role, status, passwordHash, createdAt</code>)</li>
+        <li><strong>Settings</strong> (Columns: <code>key, value</code>)</li>
+      </ul>
+
+      <h4 style="color: var(--primary); margin-top: 1rem; margin-bottom: 0.25rem;">2. Complete Google Apps Script:</h4>
+      <p>The ready-to-paste script is provided in <code>google-sheets-integration/Code.gs</code> in your project repository.</p>
+
+      <h4 style="color: var(--primary); margin-top: 1rem; margin-bottom: 0.25rem;">3. Deploy as Web App:</h4>
+      <p>In Apps Script: Click <strong>Deploy > New Deployment > Web app</strong>. Execute as: <strong>Me</strong>. Who has access: <strong>Anyone</strong>. Copy the Web App URL and paste into <code>GOOGLE_SHEETS_SCRIPT_URL</code> in your <code>.env</code> file!</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" data-close="modal-sheets-guide">Understood</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- Client Scripts -->
+<script src="/js/api.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
